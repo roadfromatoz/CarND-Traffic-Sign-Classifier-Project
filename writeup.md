@@ -15,15 +15,22 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./reports/vis0.png "An example sign image"
-[image2]: ./reports/vis1.png "Histogram of types of signs in training data"
-[image3]: ./reports/vis2.png "Histogram of types of signs in validation data"
-[image4]: ./reports/vis3.png "Histogram of types of signs in test data"
-[image5]: ./reports/prep0.png "Apply gray and normalization"
+[image2]: ./reports/vis1.png "Histogram of types of signs in training/validation data"
+[image3]: ./reports/vis2.png "Histogram of types of signs in training/testing data"
+[image4]: ./reports/prep0.png "Apply gray and normalization"
+[image5]: ./reports/prep1.png "Apply translation ([10,-10]), rotate (5 degrees) and scaling (x1.1)"
 [image6]: ./reports/image0.png "Beware of ice/snow"
 [image7]: ./reports/image1.png "Speed limit (60km/h)"
 [image8]: ./reports/image2.png "Wild animals crossing"
 [image9]: ./reports/image3.png "Speed limit (50km/h)"
 [image10]: ./reports/image4.png "No passing"
+[image11]: ./reports/test0.png "Speed limit (70km/h)"
+[image12]: ./reports/test1.png "Dangerous curve to the right"
+[image13]: ./reports/test2.png "Speed limit (120km/h)"
+[image14]: ./reports/test3.png "Traffic signals"
+[image15]: ./reports/test4.png "Beware of ice/snow"
+[image16]: ./reports/softmax0.png "Softmax on downloaded image 0"
+[image17]: ./reports/softmax1.png "Softmax on failed test image 0"
 
 ###Data Set Summary & Exploration
 
@@ -47,10 +54,9 @@ The following is an example sign image, title is sign id and meaning read from c
 
 ![An example sign image][image1]
 
-I also plotted a histogram of signs among train, validation and test data. The signs do not appear evenly in the datasets. For example, the speed limits/passing related signs appear more frequently than warning signs. 
-![training][image2]
-![validation][image3]
-![test][image4]
+I also plotted a histogram of signs among train vs validation and train vs test data. The signs do not appear evenly in the datasets. For example, the speed limits/passing related signs appear more frequently than warning signs. 
+![training/validation][image2]
+![training/testing][image3]
 
 It is also noticeable that train/validation/test seem to have a similar distribution of types of signs.
 
@@ -60,10 +66,13 @@ It is also noticeable that train/validation/test seem to have a similar distribu
 
 The code for this step is contained in the fourth code cell of the IPython notebook.
 
-As a first step, I decided to convert the images to grayscale because grayscale should sufficiently capture images features and make the network easier to train. I also added a normalization step to map pixels from [min, max] to [0, 1], making pixel distribution more uniform across the entire datasets.
+As a first step, I decided to convert the images to grayscale because grayscale should sufficiently capture images features and make the network easier to train. I also added a normalization step: contrast-limited adaptive histogram equalization to make the pixel value distibution more uniform while not overamplifying contrast. 
 
-Here is an example of a traffic sign image before, after grayscale, after both grayscale and norm.
-![image preprocessing][image5]
+Here is an example of a traffic sign image before, after grayscale, after both grayscale and clahe.
+![grayscale and norm][image4]
+
+I also add a random translation (up to +/-10%), rotation (up to +/- 5 degrees) and scaling (0.9 to 1.1). Here is a before and after comparison of [+3, -3] pixel translation, followed by 5 degree rotation and a scaling of 1.1.
+![translation/rotation/scaling][image5]
 
 
 ####2. Describe how, and identify where in your code, you set up training, validation and testing data. How much data was in each set? Explain what techniques were used to split the data into these sets. (OPTIONAL: As described in the "Stand Out Suggestions" part of the rubric, if you generated additional data for training, describe why you decided to generate additional data, how you generated the data, identify where in your code, and provide example images of the additional data)
@@ -106,9 +115,9 @@ The code for calculating the accuracy of the model is located in the ninth cell 
 
 My final model results were:
 
-* training set accuracy of 99.9%
-* validation set accuracy of 94.6%
-* test set accuracy of 93.5%
+* training set accuracy of 99.7%
+* validation set accuracy of 95.9%
+* test set accuracy of 94.8%
 
 If an iterative approach was chosen:
 * What was the first architecture that was tried and why was it chosen?
@@ -131,7 +140,7 @@ There are many things I tested.
 
 * Which parameters were tuned? How were they adjusted and why?
 
-Batch size, learning rate, epochs. Batch size was tuned based on validation accuracy (finally set at 30). Similarly learning rate (0.0003). Epochs were tuned based on when validation accuracy gets stuck (20).
+Batch size, learning rate, epochs. Batch size was tuned based on validation accuracy and limiting spread between training and validation accuracy (finally set at 64). Similarly learning rate (0.0005). Epochs were tuned based on when validation accuracy gets stuck (30).
 
 * What are some of the important design choices and why were they chosen? For example, why might a convolution layer work well with this problem? How might a dropout layer help with creating a successful model?
 
@@ -155,7 +164,7 @@ The third image is also hard because of seemingly graffiti on top of the "5" fig
 
 The code for making predictions on my final model is located in the tenth cell of the Ipython notebook.
 
-Here are the results of the prediction:
+Here are the results of the prediction on the 5 downloaded images:
 
 | Image			        |     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
@@ -168,17 +177,166 @@ Here are the results of the prediction:
 
 The model was able to correctly guess 5 of the 5 traffic signs, which gives an accuracy of 100%. 
 
+I went ahead to pick five failed cases from the test set:
+
+![alt text][image11] ![alt text][image12] ![alt text][image13] 
+![alt text][image14] ![alt text][image15]
+
+| Image			        |     Prediction	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| Speed limit (70km/h)      		| Speed limit (120km/h)   									| 
+| Dangerous curve to the right    			| Beware of ice/snow 										|
+|Speed limit (120km/h)					| Speed limit (80km/h)											|
+| Traffic signals	      		| Pedestrians					 				|
+| Beware of ice/snow			|  Slippery road      							|
+
+These images looks challenging: the first one was heavily shaded in a stripe pattern.  The second sign (dangerous curve) looks similar to beware of ice/snow sign, especially when tilted. The third sign was rotated 45 degrees. The fourth sign (traffic light) is close to pedestrian sign when grayscaled (in this case, inputting all three channels to the network might help). The last sign is of very poor visual quality.
+
+
 ####3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction and identify where in your code softmax probabilities were outputted. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
 
 The code for making predictions on my final model is located in the 11th cell of the Ipython notebook.
 
+For the five downloaded images, the model achieves softmax on the predicted sign:
+
 | Probability         	|     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
-| .989         			| Beware of ice/snow   									| 
-| .999     				| Speed limit (60km/h)  										|
-| 1.000					| Wild animals crossing											|
-| 1.000	      			| Speed limit (50km/h)					 				|
-| 1.000				    | No passing      							|
+| 1.00000         			| Beware of ice/snow   									| 
+| 1.00000     				| Speed limit (60km/h)  										|
+| 1.00000					| Wild animals crossing											|
+| 1.00000	      			| Speed limit (50km/h)					 				|
+| 1.00000				    | No passing      							|
+
+![alt text][image16]
+
+```
+Predict confidence logits 41.04348, softmax 1.00000 - sign 30: Beware of ice/snow
+
+Predict confidence logits 21.30332, softmax 0.00000 - sign 11: Right-of-way at the next intersection
+
+Predict confidence logits 19.42945, softmax 0.00000 - sign 29: Bicycles crossing
+
+Predict confidence logits 11.77894, softmax 0.00000 - sign 23: Slippery road
+
+Predict confidence logits 11.05733, softmax 0.00000 - sign 28: Children crossing
 
 
-For the second image ... 
+
+Predict confidence logits 58.46395, softmax 1.00000 - sign 3: Speed limit (60km/h)
+
+Predict confidence logits 44.31151, softmax 0.00000 - sign 5: Speed limit (80km/h)
+
+Predict confidence logits 33.52377, softmax 0.00000 - sign 2: Speed limit (50km/h)
+
+Predict confidence logits 7.01293, softmax 0.00000 - sign 1: Speed limit (30km/h)
+
+Predict confidence logits 0.50415, softmax 0.00000 - sign 10: No passing for vehicles over 3.5 metric tons
+
+
+
+Predict confidence logits 28.40719, softmax 1.00000 - sign 31: Wild animals crossing
+
+Predict confidence logits 8.40440, softmax 0.00000 - sign 21: Double curve
+
+Predict confidence logits 8.12611, softmax 0.00000 - sign 29: Bicycles crossing
+
+Predict confidence logits 7.33135, softmax 0.00000 - sign 23: Slippery road
+
+Predict confidence logits -0.39528, softmax 0.00000 - sign 5: Speed limit (80km/h)
+
+
+
+Predict confidence logits 62.63970, softmax 1.00000 - sign 2: Speed limit (50km/h)
+
+Predict confidence logits 34.13874, softmax 0.00000 - sign 5: Speed limit (80km/h)
+
+Predict confidence logits 33.97448, softmax 0.00000 - sign 3: Speed limit (60km/h)
+
+Predict confidence logits 25.59088, softmax 0.00000 - sign 1: Speed limit (30km/h)
+
+Predict confidence logits 10.76384, softmax 0.00000 - sign 4: Speed limit (70km/h)
+
+
+
+Predict confidence logits 51.35054, softmax 1.00000 - sign 9: No passing
+
+Predict confidence logits 32.86082, softmax 0.00000 - sign 10: No passing for vehicles over 3.5 metric tons
+
+Predict confidence logits 14.30334, softmax 0.00000 - sign 16: Vehicles over 3.5 metric tons prohibited
+
+Predict confidence logits 4.12077, softmax 0.00000 - sign 15: No vehicles
+
+Predict confidence logits -0.32799, softmax 0.00000 - sign 3: Speed limit (60km/h)
+```
+
+For the five failed images, the model seems to be sure about its predictions although they seem to be wrong. It clearly overfits. 
+
+| Probability         	|     Prediction	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| 1.00000         			| Speed limit (120km/h)   									| 
+| 1.00000     				| Beware of ice/snow  										|
+| 1.00000					| Speed limit (80km/h)											|
+| 1.00000	      			| Pedestrians					 				|
+| 1.00000				    | Slippery road      							|
+
+![alt text][image17]
+
+```
+Predict confidence logits 15.86540, softmax 0.95740 - sign 8: Speed limit (120km/h)
+
+Predict confidence logits 12.71894, softmax 0.04117 - sign 4: Speed limit (70km/h)
+
+Predict confidence logits 8.65446, softmax 0.00071 - sign 40: Roundabout mandatory
+
+Predict confidence logits 8.03615, softmax 0.00038 - sign 1: Speed limit (30km/h)
+
+Predict confidence logits 7.91193, softmax 0.00034 - sign 14: Stop
+
+
+
+Predict confidence logits 15.47153, softmax 0.44538 - sign 30: Beware of ice/snow
+
+Predict confidence logits 15.24166, softmax 0.35392 - sign 28: Children crossing
+
+Predict confidence logits 14.52717, softmax 0.17322 - sign 20: Dangerous curve to the right
+
+Predict confidence logits 12.62212, softmax 0.02578 - sign 25: Road work
+
+Predict confidence logits 9.90527, softmax 0.00170 - sign 29: Bicycles crossing
+
+
+
+Predict confidence logits 20.39185, softmax 0.96184 - sign 5: Speed limit (80km/h)
+
+Predict confidence logits 16.72698, softmax 0.02463 - sign 3: Speed limit (60km/h)
+
+Predict confidence logits 15.73135, softmax 0.00910 - sign 8: Speed limit (120km/h)
+
+Predict confidence logits 15.01068, softmax 0.00443 - sign 7: Speed limit (100km/h)
+
+Predict confidence logits 1.01626, softmax 0.00000 - sign 2: Speed limit (50km/h)
+
+
+
+Predict confidence logits 13.80245, softmax 0.60577 - sign 27: Pedestrians
+
+Predict confidence logits 13.37121, softmax 0.39357 - sign 26: Traffic signals
+
+Predict confidence logits 6.63034, softmax 0.00047 - sign 24: Road narrows on the right
+
+Predict confidence logits 5.69351, softmax 0.00018 - sign 28: Children crossing
+
+Predict confidence logits 2.39223, softmax 0.00001 - sign 11: Right-of-way at the next intersection
+
+
+
+Predict confidence logits 9.59632, softmax 0.99831 - sign 23: Slippery road
+
+Predict confidence logits 2.45944, softmax 0.00079 - sign 10: No passing for vehicles over 3.5 metric tons
+
+Predict confidence logits 1.93290, softmax 0.00047 - sign 30: Beware of ice/snow
+
+Predict confidence logits 1.40592, softmax 0.00028 - sign 31: Wild animals crossing
+
+Predict confidence logits 0.76817, softmax 0.00015 - sign 19: Dangerous curve to the left
+``` 
